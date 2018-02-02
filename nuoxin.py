@@ -11,9 +11,6 @@ import re
     id = 692 开始 5.16号 格式变了
 """
 
-id = '1636'
-url = 'http://www.sznuoxin.cn/?bj-%s.html'%id
-
 
 def create_data_frame():
     df = pd.DataFrame([], columns=['type', 'name', 'model', 'color', 'price', 'dealer', 'time', 'ctime'])
@@ -36,7 +33,12 @@ def get_data_by_url(url,df,data):
     bj_content = soup.find('div', id='bj-content')
     divs = bj_content.children
     for _, div in enumerate(divs):
-        if _ == 2:
+
+        a = div.find('a',attrs={'name':'行货手机报价'})
+        if a != None:
+            index = _
+    
+        if _ == (index+1):
             data['type'] = '国行'
             tds = div.find_all('td')
             for a, td in enumerate(tds):
@@ -47,7 +49,7 @@ def get_data_by_url(url,df,data):
                 if (a+1) % 3 == 0:
                     price = td.get_text().split('/')
                     muti_price(df,data,color,price)
-        if _ == 5:
+        if _ == (index+4):
             data['type'] = '三星'
             data['name'] = '三星水货'
             tds = div.find_all('td')
@@ -59,7 +61,7 @@ def get_data_by_url(url,df,data):
                 if (a + 1) % 3 == 0:
                     price = td.get_text().split('/')
                     muti_price(df, data, color, price)
-        if _ == 8:
+        if _ == (index+7):
             for i, divv in enumerate(div.children):
                 if i == 0:
                     data['type'] = '索尼'
@@ -236,8 +238,8 @@ def split_model(name):
             return model, color
         if 'G' in name: #有G 没色
             pos = name.rfind('G')
-            model = name[:pos+1]
-            colors = name[pos+1:]
+            model = name[:pos+2]
+            colors = name[pos+2:]
             color = colors.split('/')
             model, colors = is_eq_len(model, color)
 
@@ -327,6 +329,8 @@ def split_model2(name,name2):
 
 def is_eq_len(model, color):
 
+    if len(color) ==1:
+        return model,color
     if len(color[0]) != len(color[1]):
         pre = color[0][:-len(color[1])]
         last = color[0][-len(color[1]):]
@@ -369,12 +373,27 @@ def muti_price(df,data,colors,price):
             df.loc[df.shape[0] + 1] = data
 
 
+""" 1271开始是2017.1.1
+    1608开始是2018.1.1
+    925是2016.1.1
+    573是2015.1.1"""
 
 if __name__ == '__main__':
-    id = 1636
-    for _ in reversed(range(id-1000,id)):
+
+        _=1637
+    # id = 1637
+    # for _ in reversed(range(id-1000,id+1)):
         url = 'http://www.sznuoxin.cn/?bj-%s.html' % _
+        year = '2018年'
+        if _ == 1608:
+            year = '2017'
+        if _ == 1271:
+            year = '2016'
+        if _ == 925:
+            year = '2015'
+        if _ == 573:
+            year = '2014'
         df, data = create_data_frame()
         get_data_by_url(url, df, data)
-        df.to_excel('诺亚通信'+data['time']+'.xlsx', index=True, header=True, sheet_name=data['time'])
-        print('完成爬取'+data['time'])
+        df.to_excel('诺亚通信'+year+data['time']+'.xlsx', index=True, header=True, sheet_name=data['time'])
+        print('完成爬取'+year+data['time'])
