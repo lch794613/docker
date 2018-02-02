@@ -34,23 +34,33 @@ def get_data_by_url(url,df,data):
     bj_content = soup.find('div', id='bj-content')
     divs = bj_content.children
 
-    divs_copy = list(divs)
+    divs = list(divs)
 
-    if len(divs_copy) <5:
-        divs = divs_copy[-1]
-    print(divs)
+    if len(divs) <5:
+        divs = divs[-1]
+
+    a_index = 0
+    b_index = 0
 
     for _, div in enumerate(divs):
 
-        a = div.find('a',attrs={'name':'行货手机报价'})
+
+
+        a = div.find('a',attrs = {'name':'行货手机报价'})
+
         if a != None:
-            index = _
-        print(_)
+            a_index = _
+
+        b = div.find('a', attrs = {'name':'三星水货报价'})
+        if b != None:
+            b_index = _
 
 
-        if _ == (index+1):
+        if _ == (a_index+1):
             data['type'] = '国行'
             tds = div.find_all('td')
+            if len(tds) == 0:
+                a_index = a_index +1
             for a, td in enumerate(tds):
                 if (a+1) % 3 == 1:
                     data['name'] = td.get_text()
@@ -59,10 +69,12 @@ def get_data_by_url(url,df,data):
                 if (a+1) % 3 == 0:
                     price = td.get_text().split('/')
                     muti_price(df,data,color,price)
-        if _ == (index+4):
+        if _ == (b_index+1):
             data['type'] = '三星'
             data['name'] = '三星水货'
             tds = div.find_all('td')
+            if len(tds) == 0:
+                b_index = b_index +1
             for a, td in enumerate(tds):
                 if (a + 1) % 3 == 1:
                     text = td.get_text()
@@ -71,7 +83,7 @@ def get_data_by_url(url,df,data):
                 if (a + 1) % 3 == 0:
                     price = td.get_text().split('/')
                     muti_price(df, data, color, price)
-        if _ == (index+7):
+        if _ == (len(list(divs))-1):
             for i, divv in enumerate(div.children):
                 if i == 0:
                     data['type'] = '索尼'
@@ -391,8 +403,8 @@ def muti_price(df,data,colors,price):
 if __name__ == '__main__':
     
     year = '2018年'
-        #_=1350
-    id = 1586
+        #_=1435
+    id = 1637
     for _ in reversed(range(id-1000,id+1)):
         url = 'http://www.sznuoxin.cn/?bj-%s.html' % _
 
@@ -406,5 +418,7 @@ if __name__ == '__main__':
             year = '2014年'
         df, data = create_data_frame()
         get_data_by_url(url, df, data)
+        if len(data['time']) >6:
+            data['time'] = data['time'][-5:]
         df.to_excel('诺亚通信'+year+data['time']+'.xlsx', index=True, header=True, sheet_name=data['time'])
         print('完成爬取'+year+data['time'])
