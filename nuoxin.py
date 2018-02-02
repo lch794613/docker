@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import re
+import copy
 
 """ 
     id = 1636 是 1.31号
@@ -32,12 +33,21 @@ def get_data_by_url(url,df,data):
     data['time'] = date
     bj_content = soup.find('div', id='bj-content')
     divs = bj_content.children
+
+    divs_copy = list(divs)
+
+    if len(divs_copy) <5:
+        divs = divs_copy[-1]
+    print(divs)
+
     for _, div in enumerate(divs):
 
         a = div.find('a',attrs={'name':'行货手机报价'})
         if a != None:
             index = _
-    
+        print(_)
+
+
         if _ == (index+1):
             data['type'] = '国行'
             tds = div.find_all('td')
@@ -379,20 +389,21 @@ def muti_price(df,data,colors,price):
     573是2015.1.1"""
 
 if __name__ == '__main__':
-
-        _=1637
-    # id = 1637
-    # for _ in reversed(range(id-1000,id+1)):
+    
+    year = '2018年'
+        #_=1350
+    id = 1586
+    for _ in reversed(range(id-1000,id+1)):
         url = 'http://www.sznuoxin.cn/?bj-%s.html' % _
-        year = '2018年'
-        if _ == 1608:
-            year = '2017'
-        if _ == 1271:
-            year = '2016'
-        if _ == 925:
-            year = '2015'
-        if _ == 573:
-            year = '2014'
+
+        if _ < 1608:
+            year = '2017年'
+        if _ < 1271:
+            year = '2016年'
+        if _ < 925:
+            year = '2015年'
+        if _ < 573:
+            year = '2014年'
         df, data = create_data_frame()
         get_data_by_url(url, df, data)
         df.to_excel('诺亚通信'+year+data['time']+'.xlsx', index=True, header=True, sheet_name=data['time'])
